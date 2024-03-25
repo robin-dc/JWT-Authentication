@@ -6,9 +6,10 @@ const {
     editBook,
     deleteBook
 } = require('../controllers/books.controller')
+const protect = require('../middleware/authMiddleware')
 
-booksRouter.route('/').get(getAllBooks).post(createBook)
-booksRouter.route('/:id').patch(editBook).delete(deleteBook)
+booksRouter.route('/').get(protect, getAllBooks).post(protect, createBook)
+booksRouter.route('/:id').patch(protect, editBook).delete(protect, deleteBook)
 
 
 module.exports = booksRouter

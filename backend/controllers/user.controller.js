@@ -35,7 +35,8 @@ const registerUser = asyncHandler(async(req,res) => {
     res.status(201).send({
         id: newUser._id,
         name: newUser.name,
-        email: newUser.email
+        email: newUser.email,
+        token: generateToken(newUser._id)
     })
 })
 
@@ -61,7 +62,8 @@ const loginUser = asyncHandler(async(req,res) => {
     res.status(200).json({
         id: user._id,
         name: user.name,
-        email: user.email
+        email: user.email,
+        token: generateToken(user._id)
     })
 })
 
@@ -69,8 +71,22 @@ const loginUser = asyncHandler(async(req,res) => {
 // @route /api/user/me
 // @access private
 const getMe = asyncHandler(async(req,res) => {
+    const {_id, name, email} = await User.findById(req.user.id)
 
+    res.status(200).json({
+        id: _id,
+        name,
+        email
+    })
 })
+
+const generateToken = (id) => {
+    const token = jwt.sign({id}, process.env.JWT_SECRET, {
+        expiresIn: '30d'
+    })
+
+    return token
+}
 
 
 module.exports = {

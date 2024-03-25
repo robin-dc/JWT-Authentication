@@ -1,11 +1,12 @@
 const asyncHandler = require('express-async-handler')
 const Book = require('../models/booksModel')
+const User = require('../models/userModel')
 
 // @desc Retrieve all books
 // @route GET /api/books/
 // @access public
 const getAllBooks = asyncHandler(async(req, res) => {
-    const allBooks = await Book.find({})
+    const allBooks = await Book.find({user: req.user.id})
 
     if(!allBooks){
         res.status(404)
@@ -26,7 +27,11 @@ const createBook = asyncHandler(async(req, res) => {
         throw new Error('Book title is required')
     }
 
-    const book = await Book.create({title, desc})
+    const book = await Book.create({
+        title,
+        desc,
+        user:req.user.id
+    })
     res.status(201).json(book)
 })
 
@@ -42,6 +47,25 @@ const editBook = asyncHandler(async(req, res) => {
         res.status(404)
         throw new Error('No book found')
     }
+
+
+    const user = await User.findById(req.user.id)
+    // i guess req.user.id qill be null if theres no req.user created in the token
+
+
+    if(!user){
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    console.log(user)
+    // Make sure the logged in user matches the goal user
+    if(bookToEdit.user.ToString() !== user._id){
+        res.status(401)
+        throw new Error('User not authorized')
+    }
+
+
     const updatedBook = await Book.findByIdAndUpdate({_id: id}, {title, desc}, {new: true})
 
     res.status(200).json(updatedBook)
@@ -58,6 +82,23 @@ const deleteBook = asyncHandler(async(req, res) => {
         res.status(404)
         throw new Error('No book found')
     }
+
+    const user = await User.findById(req.user.id)
+    // i guess req.user.id qill be null if theres no req.user created in the token
+
+
+    if(!user){
+        res.status(401)
+        throw new Error('User not found')
+    }
+
+    console.log(user)
+    // Make sure the logged in user matches the goal user
+    if(bookToDelete.user.ToString() !== user._id){
+        res.status(401)
+        throw new Error('User not authorized')
+    }
+
     await Book.findByIdAndDelete({_id: id})
 
     res.status(200).json({message: "Deleted Successfully"})
